@@ -1,4 +1,4 @@
-import { createId, roundMoney } from "./ids";
+import { createId, safeMoney } from "./ids";
 import type { BookingStatus, BudgetItem, CostStatus, EventPlan, Quote, TaskStatus } from "./types";
 
 /** Direct, user-initiated edits. These are pure functions over the plan. */
@@ -16,7 +16,7 @@ export function updateBudgetItem(
       if (i.id !== itemId) return i;
       const next = { ...i, ...patch };
       if (patch.amount !== undefined) {
-        next.amount = roundMoney(Math.max(0, patch.amount));
+        next.amount = safeMoney(patch.amount);
         if (i.scaling === "per_guest") next.unitCost = next.amount / plan.event.guestCount;
       }
       return next;
@@ -38,7 +38,7 @@ export function addBudgetItem(
         description: input.description.trim().slice(0, 300) || "Untitled item",
         scaling: "fixed",
         unitCost: null,
-        amount: roundMoney(Math.max(0, input.amount)),
+        amount: safeMoney(input.amount),
         costStatus: input.costStatus,
         essential: input.essential,
         notes: "Added manually.",
@@ -71,7 +71,7 @@ export function addQuote(plan: EventPlan, vendorId: string, quote: Omit<Quote, "
         ? {
             ...v,
             bookingStatus: v.bookingStatus === "booked" ? v.bookingStatus : "quote_received",
-            quotes: [...v.quotes, { ...quote, amount: roundMoney(Math.max(0, quote.amount)), id: createId("quo"), status: "received" as const }].slice(0, 20),
+            quotes: [...v.quotes, { ...quote, amount: safeMoney(quote.amount), id: createId("quo"), status: "received" as const }].slice(0, 20),
           }
         : v,
     ),

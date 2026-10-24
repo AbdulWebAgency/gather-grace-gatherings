@@ -88,7 +88,8 @@ export function validateDependencies(tasks: Task[]): DependencyIssue[] {
         issues.push({ kind: "unknown_dependency", taskId: task.id, message: `"${task.title}" depends on a task that does not exist.` });
       } else {
         const prereq = byId.get(dep)!;
-        if (prereq.deadline > task.deadline && task.status !== "completed") {
+        // A completed prerequisite cannot block anything, whatever its old deadline.
+        if (prereq.deadline > task.deadline && task.status !== "completed" && prereq.status !== "completed") {
           issues.push({
             kind: "order",
             taskId: task.id,

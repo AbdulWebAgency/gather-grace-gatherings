@@ -168,7 +168,7 @@ export function validateProposal(
       }
       case "set_budget": {
         const v = op.numberValue;
-        if (v === null || v <= 0 || v > 1_000_000_000) {
+        if (v === null || roundMoney(v) <= 0 || v > 1_000_000_000) {
           reject("Change budget", "Budget must be a positive amount.");
         } else if (v === event.budget) {
           reject("Change budget", `Budget is already ${money(v)}.`);

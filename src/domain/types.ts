@@ -24,7 +24,12 @@ export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
 
 export const isoDateSchema = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use the format YYYY-MM-DD");
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use the format YYYY-MM-DD")
+  .refine((v) => {
+    // Reject impossible calendar dates such as 2026-02-30 (round-trip check).
+    const d = new Date(`${v}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+  }, "Enter a real calendar date");
 const shortText = z.string().trim().max(300);
 const longText = z.string().trim().max(1200);
 const idSchema = z.string().min(1).max(64);
