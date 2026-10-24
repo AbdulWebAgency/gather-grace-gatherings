@@ -188,7 +188,7 @@ export function EventDetailsForm({ initialValues, extraction, onBack, onSubmit }
               value={values.category}
               onChange={(e) => set("category", e.target.value)}
             >
-              {EVENT_CATEGORIES.map((c) => <option key={c} value={c}>{c === "community" ? "Community event" : c[0].toUpperCase() + c.slice(1)}</option>)}
+              {EVENT_CATEGORIES.map((c) => <option key={c} value={c}>{c === "community" ? "Community event" : c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
             </select>
           </div>
           <div className="space-y-1.5">
