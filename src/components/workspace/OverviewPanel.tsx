@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Lightbulb } from "lucide-react";
 import { formatMoney, summarizePlanBudget } from "@/domain/budget";
 import { classifyTask, daysBetween, sortTasksChronologically, validateDependencies } from "@/domain/timeline";
@@ -78,7 +79,7 @@ export function OverviewPanel({ plan, onNavigate }: { plan: EventPlan; onNavigat
   );
 }
 
-function Stat({ label, value, sub, tone, icon }: { label: string; value: string; sub?: string; tone?: "danger" | "success"; icon?: React.ReactNode }) {
+function Stat({ label, value, sub, tone, icon }: { label: string; value: string; sub?: string; tone?: "danger" | "success"; icon?: ReactNode }) {
   const toneClass = tone === "danger" ? "text-destructive" : tone === "success" ? "text-success" : "text-foreground";
   return (
     <div className="panel p-4">
