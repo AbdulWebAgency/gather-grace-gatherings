@@ -88,7 +88,7 @@ describe("acceptance scenario: 150 guests, ₹85,000, two weeks earlier", () => 
     expect(task("task_decor").deadline).toBe("2026-03-26");
     expect(preview.report.dependencyIssues).toEqual([]);
     expect(preview.report.attention.map((t) => t.id)).toEqual(["task_invites", "task_caterer"]);
-    expect(preview.report.scheduleImpacts.find((i) => i.taskId === "task_invites")?.reason).toBe("compressed");
+    expect(preview.report.scheduleImpacts.find((i) => i.taskId === "task_invites")?.reason).toBe("rescheduled");
 
     expect(next.vendors).toEqual(plan.vendors);
     expect(next.tasks.map((t) => t.id)).toEqual(plan.tasks.map((t) => t.id));
