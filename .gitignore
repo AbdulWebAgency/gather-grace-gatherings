@@ -30,3 +30,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local npm lockfile; repository uses Bun
+/package-lock.json
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
