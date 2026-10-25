@@ -20,7 +20,7 @@ async function run<T>(fn: () => Promise<T>): Promise<AIResult<T>> {
   }
 }
 
-const provider = async () => (await import("@/ai/lovableGatewayProvider.server")).getPlanningProvider();
+const provider = async () => (await import("@/ai/geminiProvider.server")).getPlanningProvider();
 
 export const extractEventDetails = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
