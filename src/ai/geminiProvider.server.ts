@@ -1,21 +1,15 @@
 import { createGoogle } from "@ai-sdk/google";
 import { generateObject, jsonSchema } from "ai";
+import type { JSONSchema7 } from "ai";
 import type { z } from "zod";
-import {
-  extractedEventJsonSchema,
-  planDraftJsonSchema,
-  planChangeJsonSchema,
-} from "./jsonSchemas";
+import { extractedEventJsonSchema, planDraftJsonSchema, planChangeJsonSchema } from "./jsonSchemas";
 import {
   extractedEventSchema,
   planDraftSchema,
   type ExtractedEvent,
   type PlanDraft,
 } from "@/domain/planBuilder";
-import {
-  planChangeProposalSchema,
-  type PlanChangeProposal,
-} from "@/domain/planChange";
+import { planChangeProposalSchema, type PlanChangeProposal } from "@/domain/planChange";
 import type { EventDetails, EventPlan } from "@/domain/types";
 import {
   CHANGE_INSTRUCTIONS,
@@ -62,10 +56,7 @@ function mapGeminiError(error: unknown): AIProviderError {
   const message = err.message ?? "";
 
   // Safety / content moderation refusal
-  if (
-    /safety|blocked|harm|refus/i.test(message) ||
-    err.name === "AI_RefusalError"
-  ) {
+  if (/safety|blocked|harm|refus/i.test(message) || err.name === "AI_RefusalError") {
     return new AIProviderError("refused", "The AI declined to answer this request.");
   }
 
@@ -78,10 +69,7 @@ function mapGeminiError(error: unknown): AIProviderError {
   }
 
   // Authentication / invalid API key
-  if (
-    status === 401 ||
-    /api key|unauthorized|unauthenticated|invalid_api_key/i.test(message)
-  ) {
+  if (status === 401 || /api key|unauthorized|unauthenticated|invalid_api_key/i.test(message)) {
     return new AIProviderError("config", "The AI service is not configured correctly.");
   }
 
@@ -112,40 +100,16 @@ function mapGeminiError(error: unknown): AIProviderError {
   }
   console.error("Gemini provider API error:", {
     name: error instanceof Error ? error.name : "Unknown",
-    message: error instanceof Error ? error.message : String(error),
-    statusCode:
-      typeof error === "object" && error !== null && "statusCode" in error
-        ? error.statusCode
-        : undefined,
-    responseBody:
-      typeof error === "object" && error !== null && "responseBody" in error
-        ? error.responseBody
-        : undefined,
-    isRetryable:
-      typeof error === "object" && error !== null && "isRetryable" in error
-        ? error.isRetryable
-        : undefined,
-    finishReason:
-      typeof error === "object" && error !== null && "finishReason" in error
-        ? error.finishReason
-        : undefined,
-    responseModel:
-      typeof error === "object" && error !== null && "response" in error
-        ? (error.response as { modelId?: string } | undefined)?.modelId
-        : undefined,
+    statusCode: status,
   });
   return new AIProviderError(
     "unavailable",
     "The AI service is temporarily unavailable. Your plan has not been changed.",
   );
 }
-function adaptSchema(value: unknown): any {
-  if (Array.isArray(value)) {
-    return value.map(adaptSchema);
-  }
-
-  if (value === null || typeof value !== "object") {
-    return value;
+function adaptSchema(value: unknown): JSONSchema7 {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError("Expected a JSON Schema object");
   }
 
   const source = value as Record<string, unknown>;
@@ -153,16 +117,29 @@ function adaptSchema(value: unknown): any {
 
   for (const [key, child] of Object.entries(source)) {
     if (key === "type" && Array.isArray(child) && child.includes("null")) {
-      result["type"] = child.find((type) => type !== "null");
-      result["nullable"] = true;
+      const nonNullType = child.find((type) => type !== "null");
+
+      if (nonNullType !== undefined) {
+        result[key] = nonNullType;
+        result["nullable"] = true;
+      }
     } else if (key === "enum" && Array.isArray(child)) {
-      result["enum"] = child.filter((item) => item !== null);
-    } else {
+      result[key] = child.filter((item) => item !== null);
+    } else if (key === "items" && child !== null && typeof child === "object") {
       result[key] = adaptSchema(child);
+    } else if (key === "properties" && child !== null && typeof child === "object") {
+      result[key] = Object.fromEntries(
+        Object.entries(child as Record<string, unknown>).map(([name, schema]) => [
+          name,
+          adaptSchema(schema),
+        ]),
+      );
+    } else {
+      result[key] = child;
     }
   }
 
-  return result;
+  return result as JSONSchema7;
 }
 interface StructuredGeminiCall<T> {
   instructions: string;
@@ -182,6 +159,8 @@ async function callStructured<T>(call: StructuredGeminiCall<T>): Promise<T> {
       system: call.instructions,
       prompt: call.input,
       schema: jsonSchema(adaptSchema(call.jsonSchema)),
+      maxRetries: 0,
+      abortSignal: AbortSignal.timeout(30_000),
     });
 
     // Ensure the returned object strictly passes domain Zod validation

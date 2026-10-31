@@ -32,15 +32,29 @@ interface StructuredCall<T> {
 function mapStatus(status: number, body: string): AIProviderError {
   let message = "";
   try {
-    message = (JSON.parse(body) as { message?: string; error?: { message?: string } }).message ?? "";
+    message =
+      (JSON.parse(body) as { message?: string; error?: { message?: string } }).message ?? "";
   } catch {
     /* ignore */
   }
-  if (status === 401) return new AIProviderError("config", "The AI service is not configured correctly.");
-  if (status === 402) return new AIProviderError("credits", message || "AI credits are exhausted. Add credits in Settings → Plans & credits.");
-  if (status === 403) return new AIProviderError("denied", message || "The AI service declined this request.");
-  if (status === 429) return new AIProviderError("rate_limited", "The AI service is busy. Please wait a moment and try again.");
-  return new AIProviderError("unavailable", "The AI service is temporarily unavailable. Your plan has not been changed.");
+  if (status === 401)
+    return new AIProviderError("config", "The AI service is not configured correctly.");
+  if (status === 402)
+    return new AIProviderError(
+      "credits",
+      message || "AI credits are exhausted. Add credits in Settings → Plans & credits.",
+    );
+  if (status === 403)
+    return new AIProviderError("denied", message || "The AI service declined this request.");
+  if (status === 429)
+    return new AIProviderError(
+      "rate_limited",
+      "The AI service is busy. Please wait a moment and try again.",
+    );
+  return new AIProviderError(
+    "unavailable",
+    "The AI service is temporarily unavailable. Your plan has not been changed.",
+  );
 }
 
 async function readStreamedText(response: Response): Promise<string> {
@@ -63,7 +77,12 @@ async function readStreamedText(response: Response): Promise<string> {
         .map((l) => l.slice(5).trim())
         .join("");
       if (!data || data === "[DONE]") continue;
-      let event: { type?: string; delta?: string; response?: { error?: { message?: string } }; message?: string };
+      let event: {
+        type?: string;
+        delta?: string;
+        response?: { error?: { message?: string } };
+        message?: string;
+      };
       try {
         event = JSON.parse(data);
       } catch {
@@ -71,12 +90,19 @@ async function readStreamedText(response: Response): Promise<string> {
       }
       if (event.type === "response.output_text.delta" && typeof event.delta === "string") {
         text += event.delta;
-        if (text.length > MAX_OUTPUT_CHARS) throw new AIProviderError("malformed", "The AI response was too large.");
-      } else if (event.type === "response.refusal.delta" || event.type === "response.refusal.done") {
+        if (text.length > MAX_OUTPUT_CHARS)
+          throw new AIProviderError("malformed", "The AI response was too large.");
+      } else if (
+        event.type === "response.refusal.delta" ||
+        event.type === "response.refusal.done"
+      ) {
         throw new AIProviderError("refused", "The AI declined to answer this request.");
       } else if (event.type === "response.failed" || event.type === "error") {
         console.error("AI stream failed", event.response?.error?.message ?? event.message);
-        throw new AIProviderError("unavailable", "The AI service failed to complete the request. Your plan has not been changed.");
+        throw new AIProviderError(
+          "unavailable",
+          "The AI service failed to complete the request. Your plan has not been changed.",
+        );
       }
     }
   }
@@ -103,12 +129,22 @@ async function callStructured<T>(call: StructuredCall<T>): Promise<T> {
         reasoning: { effort: "low" },
         store: false,
         stream: true,
-        text: { format: { type: "json_schema", name: call.schemaName, schema: call.jsonSchema, strict: true } },
+        text: {
+          format: {
+            type: "json_schema",
+            name: call.schemaName,
+            schema: call.jsonSchema,
+            strict: true,
+          },
+        },
       }),
     });
   } catch (error) {
     console.error("AI network error", error);
-    throw new AIProviderError("unavailable", "Could not reach the AI service. Your plan has not been changed.");
+    throw new AIProviderError(
+      "unavailable",
+      "Could not reach the AI service. Your plan has not been changed.",
+    );
   }
 
   if (!response.ok) {
@@ -122,12 +158,18 @@ async function callStructured<T>(call: StructuredCall<T>): Promise<T> {
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw new AIProviderError("malformed", "The AI returned an unreadable response. Your plan has not been changed — please try again.");
+    throw new AIProviderError(
+      "malformed",
+      "The AI returned an unreadable response. Your plan has not been changed — please try again.",
+    );
   }
   const result = call.validator.safeParse(parsed);
   if (!result.success) {
     console.error("AI output failed validation", result.error.issues.slice(0, 5));
-    throw new AIProviderError("malformed", "The AI returned an incomplete proposal. Your plan has not been changed — please try again.");
+    throw new AIProviderError(
+      "malformed",
+      "The AI returned an incomplete proposal. Your plan has not been changed — please try again.",
+    );
   }
   return result.data;
 }
@@ -153,7 +195,11 @@ export class LovableGatewayPlanningProvider implements PlanningAIProvider {
     });
   }
 
-  proposePlanChange({ plan, request, today }: Parameters<PlanningAIProvider["proposePlanChange"]>[0]) {
+  proposePlanChange({
+    plan,
+    request,
+    today,
+  }: Parameters<PlanningAIProvider["proposePlanChange"]>[0]) {
     return callStructured({
       instructions: CHANGE_INSTRUCTIONS,
       input: changeInput(plan, request, today),

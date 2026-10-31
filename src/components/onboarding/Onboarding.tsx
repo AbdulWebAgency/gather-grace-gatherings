@@ -6,19 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { ExtractedEvent } from "@/domain/planBuilder";
-import type { EventDetails } from "@/domain/types";
 import { extractEventDetails } from "@/lib/planning.functions";
 import { todayIso } from "@/state/usePlanWorkspace";
-import { EventDetailsForm, emptyFormValues, formValuesFromExtraction, type EventFormValues } from "./EventDetailsForm";
+import {
+  EventDetailsForm,
+  emptyFormValues,
+  formValuesFromExtraction,
+  type EventFormValues,
+} from "./EventDetailsForm";
+import { PlanRecoveryPanel } from "@/components/workspace/PlanRecoveryPanel";
+import type { PlanWorkspace } from "@/state/usePlanWorkspace";
 
 const EXAMPLE =
   "A community celebration for our neighbourhood association in Pune, about 100 guests, six weeks from today. Budget is ₹1,00,000. We want a warm, festive feel with local food, a small stage for performances, wheelchair access and vegetarian options. Photography is a priority.";
 
 interface OnboardingProps {
-  onGenerate: (event: EventDetails) => Promise<string | null>;
+  ws: PlanWorkspace;
 }
 
-export function Onboarding({ onGenerate }: OnboardingProps) {
+export function Onboarding({ ws }: OnboardingProps) {
   const extract = useServerFn(extractEventDetails);
   const [step, setStep] = useState<"describe" | "review">("describe");
   const [description, setDescription] = useState("");
@@ -35,7 +41,9 @@ export function Onboarding({ onGenerate }: OnboardingProps) {
     }
     setBusy(true);
     try {
-      const result = await extract({ data: { text: description.slice(0, 2000), today: todayIso() } });
+      const result = await extract({
+        data: { text: description.slice(0, 2000), today: todayIso() },
+      });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -44,7 +52,9 @@ export function Onboarding({ onGenerate }: OnboardingProps) {
       setInitialValues(formValuesFromExtraction(result.data));
       setStep("review");
     } catch {
-      setError("Could not reach the planning assistant. Please try again or fill in the details manually.");
+      setError(
+        "Could not reach the planning assistant. Please try again or fill in the details manually.",
+      );
     } finally {
       setBusy(false);
     }
@@ -52,18 +62,45 @@ export function Onboarding({ onGenerate }: OnboardingProps) {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:py-16">
+      {ws.storageNotice && (
+        <p
+          role="status"
+          className="mb-4 rounded-lg border border-warning/40 bg-card p-3 text-sm text-warning-foreground"
+        >
+          {ws.storageNotice}
+        </p>
+      )}
+      <PlanRecoveryPanel
+        recovery={ws.recovery}
+        dismissed={ws.recoveryDismissed}
+        currentPlan={null}
+        onDismiss={ws.dismissRecovery}
+        onRestore={ws.restoreRecovery}
+      />
       <header className="mb-8">
-        <p className="eyebrow">Event Planning Assistant</p>
-        <h1 className="mt-2 text-4xl sm:text-5xl font-semibold text-foreground">Plan an event that actually happens.</h1>
+        <p className="eyebrow">EventPilot</p>
+        <h1 className="mt-2 text-4xl sm:text-5xl font-semibold text-foreground">
+          Plan an event that actually happens.
+        </h1>
         <p className="mt-3 text-lg text-muted-foreground max-w-2xl">
-          Weddings, birthdays and community events — a budget, timeline and vendor checklist you can keep revising in plain language.
+          Weddings, birthdays and community events — a budget, timeline and vendor checklist you can
+          keep revising in plain language.
         </p>
       </header>
 
       {step === "describe" ? (
         <section aria-labelledby="describe-heading" className="panel p-5 sm:p-7">
-          <h2 id="describe-heading" className="text-2xl font-semibold">1. Describe your event</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Write it the way you'd tell a friend. You'll review everything before a plan is created.</p>
+          <h2 id="describe-heading" className="text-2xl font-semibold">
+            1. Describe your event
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Write it the way you'd tell a friend. You'll review everything before a plan is created.
+          </p>
+          <p className="mt-3 rounded-lg border bg-muted p-3 text-sm text-muted-foreground">
+            When you use AI planning, your event description and relevant plan details are sent to
+            Google Gemini to create or revise your plan. Avoid including details you do not want to
+            share with the AI service.
+          </p>
           <div className="mt-5 space-y-2">
             <Label htmlFor="event-description">Event description</Label>
             <Textarea
@@ -76,7 +113,11 @@ export function Onboarding({ onGenerate }: OnboardingProps) {
               aria-describedby="description-count"
             />
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-              <button type="button" className="underline underline-offset-2 hover:text-foreground" onClick={() => setDescription(EXAMPLE)}>
+              <button
+                type="button"
+                className="underline underline-offset-2 hover:text-foreground"
+                onClick={() => setDescription(EXAMPLE)}
+              >
                 Use an example description
               </button>
               <span id="description-count">{description.length}/2000</span>
@@ -89,10 +130,22 @@ export function Onboarding({ onGenerate }: OnboardingProps) {
           )}
           <div className="mt-6 flex flex-wrap gap-3">
             <Button onClick={handleExtract} disabled={busy}>
-              {busy ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Sparkles aria-hidden="true" />}
+              {busy ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <Sparkles aria-hidden="true" />
+              )}
               {busy ? "Reading your description…" : "Extract details"}
             </Button>
-            <Button variant="outline" onClick={() => { setExtraction(null); setInitialValues(emptyFormValues()); setStep("review"); }} disabled={busy}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setExtraction(null);
+                setInitialValues(emptyFormValues());
+                setStep("review");
+              }}
+              disabled={busy}
+            >
               <PenLine aria-hidden="true" /> Fill in manually
             </Button>
           </div>
@@ -102,7 +155,7 @@ export function Onboarding({ onGenerate }: OnboardingProps) {
           initialValues={initialValues}
           extraction={extraction}
           onBack={() => setStep("describe")}
-          onSubmit={onGenerate}
+          onSubmit={ws.generate}
         />
       )}
     </main>

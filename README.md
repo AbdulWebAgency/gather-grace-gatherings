@@ -1,655 +1,410 @@
-# Gather Grace Gatherings
+<div align="center">
 
-PROJECT: EVENT PLANNING ASSISTANT
+# 🎉 EventPilot
 
-Build a polished, functional, production-oriented web application for PromptWars Virtual Challenge 5.
+### ✨ Plan smarter. Spend wiser. Celebrate better.
 
-The application helps users organize weddings, birthdays, and community events by creating personalized event plans, managing budgets, organizing timelines, tracking vendor requirements, and adapting the existing plan when the user's requirements change.
+**Your AI-powered event planning companion.**
 
-This must be a real, interactive application—not a static prototype, landing-page-only design, or chatbot with decorative dashboard components.
+Plan weddings, birthdays, and community events with AI-assisted budgets, timelines, tasks, and vendor checklists—all in one workspace.
 
-1. PRIMARY PRODUCT OBJECTIVE
+<br/>
 
-Build an AI-assisted event-planning workspace for first-time, budget-conscious organizers managing events with multiple arrangements and changing constraints.
+[🚀 Get Started](#-get-started) · [✨ Features](#-key-features) · [🧠 How It Works](#-how-it-works) · [🛠️ Tech Stack](#️-technology-stack)
 
-Support three event categories:
+<br/>
 
-Weddings
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?logo=typescript&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2?logo=googlegemini&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-Powered-646CFF?logo=vite&logoColor=white)
+![Vitest](https://img.shields.io/badge/Tests-Vitest-6E9F18?logo=vitest&logoColor=white)
 
-Birthdays
+</div>
 
-Community events
+---
 
-The central workflow is:
+## 📑 Table of Contents
 
-Understand the event and user's preferences
-→ Generate a structured initial plan
-→ Organize the budget, tasks, timeline and vendor requirements
-→ Allow the user to revise the plan using natural language
-→ Recalculate and validate the affected parts
-→ Explain the consequences and outstanding decisions.
+- [🎯 The Problem](#-the-problem)
+- [💡 The Solution](#-the-solution)
+- [✨ Key Features](#-key-features)
+- [🧠 How It Works](#-how-it-works)
+- [🏗️ Architecture](#️-architecture)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [🚀 Get Started](#-get-started)
+- [🧪 Testing](#-testing)
+- [💾 Data & Persistence](#-data--persistence)
+- [🔐 Security](#-security)
+- [⚠️ Current Limitations](#️-current-limitations)
+- [🗺️ Project Structure](#️-project-structure)
 
-The application should help users make their events happen, rather than merely suggest party ideas.
+---
 
-2. CORE ARCHITECTURAL PRINCIPLES
+## 🎯 The Problem
 
-Use a clean, modular React and TypeScript architecture appropriate for the existing Lovable environment.
+Planning an event is exciting. Managing everything behind it? Not so much. 💀
 
-Separate the following responsibilities:
+Event organizers often need to juggle:
 
-Presentation and UI components.
+- 💰 Budgets that must not spiral out of control.
+- 📅 Deadlines, dependencies, and last-minute changes.
+- 🏢 Vendors, quotations, and outstanding arrangements.
+- 🔄 Changing requirements without losing track of the original plan.
 
-Event and planning domain types.
+For first-time and budget-conscious organizers, keeping everything coordinated can quickly become overwhelming.
 
-Deterministic planning and validation logic.
+## 💡 The Solution
 
-AI provider integration.
+**EventPilot brings event planning into one AI-assisted workspace.**
 
-Input validation and structured AI output validation.
+Instead of starting from scratch every time something changes, users can generate a structured plan, review its details, and request changes using everyday language.
 
-State management and plan updates.
+> 💬 _"Increase the guest count to 150, reduce the budget to ₹85,000, and move the event two weeks earlier."_
 
-Tests.
+EventPilot's planning workflow can propose the requested changes while application-level validation helps maintain consistency and protect existing plan data.
 
-Do not implement the entire application inside one giant component.
+### 👥 Who Is It For?
 
-Use descriptive names, focused functions, strict types and reusable components. Avoid unnecessary abstractions and duplicated logic.
+| 🎯 User                      | 💡 How EventPilot Helps                            |
+| ---------------------------- | -------------------------------------------------- |
+| 💍 Wedding organizers        | Coordinate arrangements, costs, and deadlines.     |
+| 🎂 Birthday planners         | Organize activities and keep spending visible.     |
+| 🎪 Community organizers      | Manage guest counts, logistics, and priorities.    |
+| 💸 Budget-conscious planners | Understand estimated costs and potential overruns. |
 
-Before creating files, inspect the available project structure and use the existing framework and conventions where appropriate. Do not replace the project's framework or existing infrastructure without a concrete reason.
+---
 
-Keep the AI integration isolated behind a small, replaceable provider interface. We intend to migrate the AI implementation to Google Gemini in a later development phase, so avoid coupling the entire application to one provider.
+## ✨ Key Features
 
-Do not expose API keys, credentials or other secrets in client-side code.
+<table>
+<tr>
+<td width="50%">
 
-3. INITIAL EVENT SETUP
+### 🤖 AI-Assisted Planning
 
-Create an intuitive onboarding flow that captures the minimum information needed to produce a useful initial plan.
+Turn natural-language event requirements into a structured planning proposal.
 
-Collect or infer, where appropriate:
+</td>
+<td width="50%">
 
-Event name.
+### 💰 Budget Awareness
 
-Event type.
+Organize planned expenses and review budget allocations and potential overruns.
 
-Event date or approximate date.
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-Location.
+### 📅 Timeline & Tasks
 
-Expected guest count.
+Keep planning tasks, priorities, deadlines, and statuses organized.
 
-Budget.
+</td>
+<td width="50%">
 
-Currency.
+### 🏢 Vendor Checklist
 
-Preferred atmosphere or theme.
+Track vendor requirements and relevant planning information.
 
-Important priorities.
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-Must-have arrangements.
+### 🔄 Natural-Language Updates
 
-Accessibility requirements.
+Request changes to an existing plan without restarting the entire planning process.
 
-Dietary or cultural requirements.
+</td>
+<td width="50%">
 
-Other constraints supplied by the user.
+### 🛡️ Structured Validation
 
-Ask targeted follow-up questions when essential information is missing.
+Validate AI-generated data against application schemas before it enters the planning workflow.
 
-Do not force users to complete an unnecessarily long questionnaire before they can start planning.
+</td>
+</tr>
+</table>
 
-Allow users to enter their requirements through natural language and review or edit the extracted details before generating the plan.
+---
 
-Support reasonable defaults, but explicitly identify assumptions. Never silently invent confirmed arrangements, bookings or quotations.
+## 🧠 How It Works
 
-4. EVENT PLAN DATA MODEL
-
-Create a typed, validated domain model for the event plan.
-
-At minimum, represent:
-
-Event details
-
-Stable event ID.
-
-Event name and category.
-
-Date and location.
-
-Guest count.
-
-Budget and currency.
-
-Preferences and constraints.
-
-User priorities.
-
-Explicit assumptions.
-
-Budget
-
-Each budget item should include:
-
-Stable ID.
-
-Category.
-
-Description.
-
-Estimated or quoted amount.
-
-Cost status.
-
-Source or notes where relevant.
-
-Whether the item is essential or optional.
-
-Distinguish clearly between:
-
-Planning estimates.
-
-User-provided quotations.
-
-Confirmed costs.
-
-Calculate totals, remaining budget and budget variance using deterministic application logic.
-
-Do not rely on the AI model to perform authoritative financial calculations.
-
-Timeline tasks
-
-Each task should include:
-
-Stable ID.
-
-Title.
-
-Description.
-
-Priority.
-
-Status.
-
-Deadline.
-
-Dependencies where applicable.
-
-Relevant notes.
-
-Support task statuses such as:
-
-Not started.
-
-In progress.
-
-Completed.
-
-Blocked.
-
-Vendor requirements
-
-Each vendor record should include:
-
-Stable ID.
-
-Vendor category.
-
-Requirement description.
-
-Contact details if supplied by the user.
-
-Quoted amount if supplied.
-
-Quotation status.
-
-Inclusions and exclusions.
-
-Questions requiring clarification.
-
-Booking status.
-
-Do not fabricate vendor contact details, quotations or availability.
-
-Plan history
-
-Track meaningful user-approved changes so the application can explain what changed between plan versions.
-
-Avoid storing unnecessary personal information.
-
-5. AI INTEGRATION
-
-Implement a real AI integration using the supported Lovable environment and its secure server-side capabilities.
-
-Keep the provider-specific code isolated so it can later be replaced with a Gemini implementation without rewriting the planning engine or UI.
-
-The AI should perform tasks that benefit from language understanding and contextual reasoning, including:
-
-Interpreting natural-language event requirements.
-
-Identifying missing information.
-
-Suggesting personalized ideas.
-
-Proposing budget allocations.
-
-Proposing task lists and planning sequences.
-
-Interpreting user-requested changes.
-
-Explaining trade-offs.
-
-Suggesting alternatives that respect the user's stated priorities.
-
-Use structured, schema-validated outputs wherever possible.
-
-Do not allow model-generated text to directly overwrite authoritative application state without validation.
-
-The application must validate the model's proposed changes before applying them.
-
-If the AI request fails, returns malformed data or produces an unusable proposal, display a clear error and preserve the existing plan.
-
-Do not silently substitute hardcoded demo responses when the live AI integration fails.
-
-Do not describe an AI-generated estimate as a confirmed vendor price.
-
-Do not claim that an external vendor has availability unless that information has actually been verified.
-
-6. BUDGET PLANNING ENGINE
-
-Implement deterministic calculations for:
-
-Total planned expenditure.
-
-Remaining budget.
-
-Budget overrun.
-
-Budget allocation percentages where useful.
-
-Cost changes caused by changes in guest count.
-
-Differences between estimates, quotations and confirmed costs.
-
-When the guest count changes, identify which budget items may be affected.
-
-Do not automatically assume every expense changes proportionally with the number of guests.
-
-For example, catering may be guest-dependent, while photography may be a fixed package.
-
-Represent assumptions explicitly and allow users to review them.
-
-When a plan exceeds the budget, show:
-
-The amount of the overrun.
-
-The largest contributing categories.
-
-Practical alternatives.
-
-The consequences of those alternatives.
-
-Respect user priorities. Do not automatically remove essential requirements simply to make the budget balance.
-
-7. TIMELINE AND DEPENDENCY ENGINE
-
-Implement deterministic date and task validation.
-
-Represent meaningful dependencies between tasks.
-
-For example, confirming a venue may need to precede finalizing invitations.
-
-When the event date changes:
-
-Recalculate relevant deadlines.
-
-Identify tasks that are now urgent or overdue.
-
-Preserve task statuses.
-
-Preserve completed tasks unless the user explicitly requests a change.
-
-Identify dependencies that may be affected.
-
-Explain important consequences.
-
-Do not create contradictory task dates or silently discard existing work.
-
-Use an appropriate date-handling library if needed, rather than implementing fragile date arithmetic.
-
-8. NATURAL-LANGUAGE PLAN UPDATES
-
-This is one of the application's most important features.
-
-Users must be able to modify the existing plan using requests such as:
-
-"Increase the guest count to 150."
-
-"Reduce the budget to ₹85,000."
-
-"Move the event two weeks earlier."
-
-"Keep photography as a priority, but suggest cheaper decoration options."
-
-"Mark the venue as confirmed."
-
-"Show me which tasks need immediate attention."
-
-The application must interpret each request in the context of the current event plan.
-
-Do not regenerate the entire plan from scratch after every change.
-
-Instead:
-
-Interpret the requested change.
-
-Produce a structured proposal describing the intended modifications.
-
-Validate the proposal against the current plan.
-
-Recalculate affected budget and timeline values.
-
-Identify downstream consequences.
-
-Preserve unaffected records and existing completed work.
-
-Present a clear change summary.
-
-Apply the changes only according to the application's confirmation rules.
-
-Preserve stable IDs for unaffected tasks and budget items.
-
-Do not mark a vendor as booked, a quotation as confirmed or a payment as completed merely because the AI suggested it.
-
-Require explicit user confirmation for consequential changes to existing confirmed arrangements.
-
-Keep the user in control of priorities and decisions.
-
-9. PRIMARY END-TO-END ACCEPTANCE SCENARIO
-
-Build and test the following scenario.
-
-Initial event:
-
-Community celebration.
-
-100 guests.
-
-Budget of ₹1,00,000.
-
-Event six weeks from the planning date.
-
-Generate a complete initial plan.
-
-Then the user requests:
-
-"Increase the guest count to 150, reduce the budget to ₹85,000, and move the event two weeks earlier."
-
-The application must:
-
-Update the existing event.
-
-Recalculate relevant budget values.
-
-Identify affected arrangements.
-
-Recalculate task deadlines.
-
-Identify urgent tasks and affected dependencies.
-
-Preserve completed tasks and unaffected records.
-
-Detect any budget overrun.
-
-Explain the trade-offs.
-
-Offer alternatives based on the user's priorities.
-
-Clearly distinguish estimates from confirmed costs.
-
-Explain what changed.
-
-The user should not have to restart the planning process.
-
-This scenario must work through the actual user-facing application, not just an isolated utility function.
-
-10. USER INTERFACE
-
-Create a polished, responsive application suitable for a serious hackathon submission.
-
-Use a coherent visual design with clear hierarchy, readable typography, consistent spacing, restrained colors and meaningful empty states.
-
-The interface should include:
-
-A. Event overview
-
-Display the event's essential details, budget status, next deadlines and outstanding decisions.
-
-B. Budget workspace
-
-Show budget categories, allocations, total planned cost, remaining budget and any overrun.
-
-Allow users to edit allocations and understand the impact of their changes.
-
-C. Timeline workspace
-
-Show tasks in a clear, chronological and priority-aware view.
-
-Allow users to change task status and inspect dependencies.
-
-D. Vendor checklist
-
-Organize vendor requirements and allow users to add quotations and compare recorded options.
-
-E. AI planning assistant
-
-Provide a natural-language interaction area connected to the actual event plan.
-
-Make it easy to review a proposed plan change before accepting it.
-
-F. Change summary
-
-When the plan changes, explain what was modified, what remains unchanged and what consequences require attention.
-
-Avoid decorative components that imply functionality which does not exist.
-
-Do not build a large number of unrelated features at the expense of the core planning workflow.
-
-11. ACCESSIBILITY
-
-Implement accessibility throughout the application.
-
-Requirements include:
-
-Semantic HTML.
-
-Properly associated form labels.
-
-Accessible names for icon-only buttons.
-
-Keyboard-operable controls.
-
-Visible focus indicators.
-
-Sufficient text and control contrast.
-
-Screen-reader announcements for important dynamic updates.
-
-Reduced-motion support.
-
-Clear error messages.
-
-Responsive layouts that work on smaller screens.
-
-Do not rely on color alone to communicate task status, warnings or budget overruns.
-
-Use appropriate ARIA attributes when needed rather than adding ARIA indiscriminately.
-
-12. SECURITY AND RELIABILITY
-
-Use server-side AI credentials.
-
-Validate user inputs and model outputs at the appropriate boundaries.
-
-Set reasonable input and output size limits.
-
-Handle malformed requests and AI service failures gracefully.
-
-Treat user-provided text as untrusted data rather than executable instructions.
-
-Do not expose stack traces, secrets or sensitive implementation details in user-facing errors.
-
-Do not store unnecessary personal information.
-
-Do not implement fake authentication, fake vendor integrations or simulated booking confirmations.
-
-If persistence is available, use it appropriately and validate records when loading them.
-
-If persistence is not configured, make the current session's capabilities clear rather than pretending data has been permanently saved.
-
-13. TESTING
-
-Create an automated test suite using the project's supported testing framework.
-
-Prioritize deterministic business logic and important user journeys.
-
-At minimum, test:
-
-Budget calculations.
-
-Budget overrun detection.
-
-Guest-count changes and affected costs.
-
-Event-date changes and deadline recalculation.
-
-Task dependency validation.
-
-Preservation of completed tasks during plan updates.
-
-Validation of structured AI output.
-
-Rejection of invalid plan updates.
-
-Preservation of existing state when AI requests fail.
-
-Distinction between estimated and confirmed costs.
-
-Add integration tests for the most important planning workflow where feasible.
-
-Do not claim tests passed unless they were actually executed.
-
-Keep the test setup small and maintainable.
-
-14. CODE QUALITY AND DOCUMENTATION
-
-Maintain a clear project structure and avoid duplicated business logic.
-
-Use TypeScript types and runtime schemas consistently.
-
-Separate calculations and validation from UI rendering.
-
-Use consistent naming and formatting.
-
-Avoid unnecessary dependencies.
-
-Create a comprehensive README explaining:
-
-The chosen primary persona.
-
-The problem being solved.
-
-The solution's approach and logic.
-
-The architecture.
-
-How AI is integrated.
-
-How budget and timeline changes are validated.
-
-The application workflow.
-
-Assumptions and limitations.
-
-How to configure environment variables.
-
-How to run the application.
-
-How to run the tests.
-
-Clearly document any feature that is not implemented.
-
-15. REPOSITORY AND SUBMISSION CONSTRAINTS
-
-The eventual submission must satisfy the PromptWars rules:
-
-Public GitHub repository.
-
-Repository size under 10 MB.
-
-One branch only.
-
-Complete source code and README.
-
-No committed API keys or secrets.
-
-No unnecessary dependency folders, build artifacts or generated files.
-
-Keep the implementation compatible with a later migration to Google Gemini and development in Google Antigravity.
-
-Do not add unrelated features simply to increase the apparent size of the project.
-
-16. REQUIRED IMPLEMENTATION WORKFLOW
-
-Work incrementally.
-
-First inspect the existing project and establish the application architecture.
-
-Then implement the core event model, deterministic budget and timeline logic, and AI-provider boundary.
-
-Next implement the initial planning workflow and natural-language update flow.
-
-Then build the UI around the working domain logic.
-
-Finally, add tests, inspect accessibility and security, and verify the complete application.
-
-After each substantial stage:
-
-Inspect the changed files.
-
-Run the relevant checks.
-
-Fix regressions before continuing.
-
-Avoid unrelated refactors.
-
-Do not declare the project complete merely because the UI renders.
-
-The application must be able to generate an initial plan and correctly update that plan in response to changed user requirements.
-
-FINAL SUCCESS CRITERION
-
-A user should be able to start planning a real event, obtain a structured and personalized plan, understand the budget and timeline, record vendor information, and revise the existing plan when their requirements change.
-
-The AI must meaningfully improve the planning experience, while deterministic application logic preserves consistency, validates calculations and protects existing plan data.
-
-Prioritize a small number of complete, reliable workflows over a large number of superficial features.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/b889fd71-477a-4334-856f-db13a882163d).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+```mermaid
+flowchart TD
+    A["📝 Enter Event Requirements"] --> B["🤖 Gemini Interprets Requirements"]
+    B --> C["📋 Generate Structured Plan"]
+    C --> D["🛡️ Validate AI Output"]
+    D --> E["📊 Review Budget, Timeline & Vendors"]
+    E --> F["💬 Request a Change"]
+    F --> G["🔄 Generate Change Proposal"]
+    G --> H["✅ Validate and Review Changes"]
+    H --> I["🎉 Apply Accepted Changes"]
+    I --> E
 ```
+
+### 🔍 The Planning Workflow
+
+1. 📝 **Describe the event** — provide details such as event type, guest count, date, location, and budget.
+2. 🤖 **Generate a plan** — use Gemini to assist with interpreting requirements and creating structured planning data.
+3. 📊 **Review the details** — inspect the event overview, budget, timeline, tasks, and vendor requirements.
+4. 💬 **Request changes** — describe what needs to change in plain language.
+5. 🛡️ **Validate the proposal** — check structured AI output against the application's schemas and planning rules.
+6. 🎯 **Review and apply** — evaluate the proposed modifications and their consequences before applying them.
+
+**The core principle:** AI helps propose; application logic validates. Important decisions remain in the user's hands.
+
+---
+
+## 🏗️ Architecture
+
+EventPilot separates the user interface, planning workflow, state management, validation, and provider-specific AI integration.
+
+```mermaid
+flowchart TB
+    U["👤 User"] --> UI["🖥️ React UI"]
+    UI --> R["🧭 TanStack Start / Router"]
+    R --> P["⚙️ Planning Server Functions"]
+    P --> AI["🤖 Gemini Planning Provider"]
+    AI --> SDK["🔌 Google AI Provider + Vercel AI SDK"]
+    P --> V["🛡️ Zod / Planning Validation"]
+    V --> S["📋 Validated Plan Data"]
+    S --> UI
+    UI --> LS["💾 Browser Local Storage"]
+```
+
+### 🧩 Main Components
+
+| Component         | Responsibility                                    |
+| ----------------- | ------------------------------------------------- |
+| `src/components/` | 🖥️ User-interface components                      |
+| `src/routes/`     | 🧭 Application routes                             |
+| `src/ai/`         | 🤖 AI provider integration and structured schemas |
+| `src/lib/`        | ⚙️ Planning functions and application logic       |
+| `src/state/`      | 💾 Workspace state and plan persistence           |
+
+### 🤖 Gemini Integration
+
+EventPilot uses Google's Gemini model through `@ai-sdk/google` and the Vercel AI SDK.
+
+When you use AI planning, EventPilot sends your event description, the event details needed to create a plan, or relevant plan details and your change request to Google Gemini. The API key stays on the server. Your active plan is otherwise stored in this browser; avoid entering information you do not want sent to the AI service. Review Google's current terms and privacy information for its handling of AI requests.
+
+The provider supports three primary planning operations:
+
+- 📝 Extracting event details from natural language.
+- 📋 Generating an initial event plan.
+- 🔄 Proposing changes to an existing plan.
+
+Structured model output is validated against application schemas. Invalid proposals should not be treated as accepted changes.
+
+The default model is `gemini-3.1-flash-lite`, which can be overridden using an environment variable.
+
+---
+
+## 🛠️ Technology Stack
+
+| Technology                 | Role                                     |
+| -------------------------- | ---------------------------------------- |
+| ⚛️ React 19                | User interface                           |
+| 🔷 TypeScript              | Type-safe application development        |
+| 🧭 TanStack Start & Router | Application framework and routing        |
+| ⚡ Vite                    | Development server and production builds |
+| 🎨 Tailwind CSS            | Styling                                  |
+| 🤖 Google Gemini           | AI-assisted planning                     |
+| 🔌 Vercel AI SDK           | Structured AI generation                 |
+| 🛡️ Zod                     | Runtime data validation                  |
+| 🧪 Vitest                  | Automated testing                        |
+| 🥟 Bun                     | Package management and scripts           |
+
+---
+
+## 🚀 Get Started
+
+Ready to run EventPilot locally? Let's go! 🔥
+
+### 📋 Prerequisites
+
+Before you begin, make sure you have:
+
+- [Bun](https://bun.sh/) installed.
+- A Google Gemini API key from [Google AI Studio](https://aistudio.google.com/).
+- Git installed on your machine.
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/AbdulWebAgency/gather-grace-gatherings.git
+cd gather-grace-gatherings
+```
+
+### 2️⃣ Install Dependencies
+
+```bash
+bun install
+```
+
+### 3️⃣ Configure Your Environment 🔑
+
+Create a `.env.local` file in the project root.
+
+Add your API key:
+
+```dotenv
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+The application also accepts `GOOGLE_GENERATIVE_AI_API_KEY` as an alternative API-key variable.
+
+**Optional:** Configure the Gemini model:
+
+```dotenv
+GEMINI_MODEL=gemini-3.1-flash-lite
+```
+
+If `GEMINI_MODEL` is omitted, EventPilot uses `gemini-3.1-flash-lite`.
+
+> 🔐 **Keep your API key private.** Never commit `.env.local`, share your key publicly, or expose credentials in client-side code. The repository's `.gitignore` excludes local environment files.
+
+### 4️⃣ Start the Development Server 🚀
+
+```bash
+bun run dev
+```
+
+Open the local URL displayed in your terminal.
+
+### 5️⃣ Build for Production 📦
+
+```bash
+bun run build
+```
+
+### 6️⃣ Preview the Production Build 🔎
+
+```bash
+bun run preview
+```
+
+<details>
+<summary>🧰 <strong>Useful Development Commands</strong></summary>
+
+| Command           | What It Does                   |
+| ----------------- | ------------------------------ |
+| `bun run dev`     | Starts the development server. |
+| `bun run test`    | Runs the automated test suite. |
+| `bun run lint`    | Runs ESLint.                   |
+| `bun run build`   | Creates a production build.    |
+| `bun run preview` | Previews the production build. |
+
+</details>
+
+---
+
+## 🧪 Testing
+
+Testing helps catch regressions as the application evolves. 🛡️
+
+Run the automated tests:
+
+```bash
+bun run test
+```
+
+Run the lint checks:
+
+```bash
+bun run lint
+```
+
+Create a production build:
+
+```bash
+bun run build
+```
+
+> 💡 Run these checks before submitting changes. Existing repository warnings or lint issues should be distinguished from regressions introduced by new changes.
+
+---
+
+## 💾 Data & Persistence
+
+EventPilot currently stores the active event plan in the browser's local storage.
+
+| Behavior            | Details                                                               |
+| ------------------- | --------------------------------------------------------------------- |
+| 💾 Saving           | The active plan is saved in the current browser.                      |
+| 🔄 Refreshing       | Saved plan data can persist across page refreshes.                    |
+| 🌐 Multiple devices | Plans are not automatically synchronized between browsers or devices. |
+| 🧹 Browser data     | Clearing relevant site data can remove the locally stored plan.       |
+
+**Heads-up:** Local browser storage is not a cloud backup. Keep this limitation in mind when using the application.
+
+---
+
+## 🔐 Security & Reliability
+
+EventPilot is designed around a few important principles:
+
+- 🔑 Keep AI credentials on the server.
+- 🛡️ Validate structured AI responses before using them.
+- 🧮 Keep authoritative calculations in application logic where applicable.
+- 🚫 Do not treat generated vendor information as independently verified.
+- 💬 Communicate AI failures without silently replacing them with fake success responses.
+- 👤 Keep users in control of important planning decisions.
+
+AI-generated prices and suggestions are estimates or proposals unless independently verified.
+
+### Planning Assumptions
+
+- Budget amounts are planning estimates, not vendor quotations.
+- Vendor names, prices, availability and bookings are not independently verified.
+- Task deadlines are calculated from suggested lead times and the event date; adjust them to fit your actual arrangements.
+- AI suggestions reflect the details and priorities you provide and may need correction.
+
+---
+
+## ⚠️ Current Limitations
+
+Transparency matters. Here's what users should know:
+
+- 💾 Event data is stored locally in the current browser rather than synchronized to an account.
+- ☁️ Cross-device synchronization is not provided by the current persistence approach.
+- 🏢 Vendor availability, bookings, and quotations are not automatically verified by the AI integration.
+- 🌐 AI features depend on a valid API key, model access, and network availability.
+- 🧠 AI-generated recommendations may require user review and correction.
+
+These limitations should be considered when using EventPilot for real-world event planning.
+
+---
+
+## 🗺️ Project Structure
+
+```text
+gather-grace-gatherings/
+├── src/
+│   ├── ai/                 # 🤖 AI provider and schemas
+│   ├── components/         # 🖥️ UI components
+│   ├── lib/                # ⚙️ Planning logic and server functions
+│   ├── routes/             # 🧭 Application routes
+│   └── state/              # 💾 Workspace state and persistence
+├── package.json            # 📦 Scripts and dependencies
+├── bun.lock                # 🥟 Bun lockfile
+├── vite.config.ts          # ⚡ Vite configuration
+└── README.md               # 📖 Project documentation
+```
+
+---
+
+<div align="center">
+
+## 🎉 Plan With Confidence. Celebrate With Joy.
+
+**EventPilot** combines AI-assisted planning with structured validation to help people turn event ideas into organized plans.
+
+Built with ❤️ for **PromptWars Virtual Challenge 5**.
+
+⭐ If you find the project interesting, consider starring the repository!
+
+</div>

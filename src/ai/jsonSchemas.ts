@@ -24,7 +24,10 @@ const bool: Schema = { type: "boolean" };
 const nullableBool: Schema = { type: ["boolean", "null"] };
 const arr = (items: Schema): Schema => ({ type: "array", items });
 const strEnum = (values: readonly string[]): Schema => ({ type: "string", enum: [...values] });
-const nullableEnum = (values: readonly string[]): Schema => ({ type: ["string", "null"], enum: [...values, null] });
+const nullableEnum = (values: readonly string[]): Schema => ({
+  type: ["string", "null"],
+  enum: [...values, null],
+});
 const obj = (properties: Record<string, Schema>): Schema => ({
   type: "object",
   properties,
@@ -87,7 +90,9 @@ export const planDraftJsonSchema = obj({
   ),
 });
 
-const STATUS_VALUES = [...new Set([...COST_STATUSES, ...TASK_STATUSES, ...BOOKING_STATUSES, ...TASK_PRIORITIES])];
+const STATUS_VALUES = [
+  ...new Set([...COST_STATUSES, ...TASK_STATUSES, ...BOOKING_STATUSES, ...TASK_PRIORITIES]),
+];
 
 export const planChangeJsonSchema = obj({
   intent: strEnum(["modify", "question"]),

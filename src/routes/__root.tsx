@@ -79,8 +79,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Event Planning Assistant" },
-      { name: "description", content: "Plan weddings, birthdays and community events with budgets, timelines and vendors." },
+      { title: "EventPilot — Event Planning & Management" },
+      {
+        name: "description",
+        content:
+          "EventPilot helps you plan events with AI-assisted budgets, timelines, and vendor tracking.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

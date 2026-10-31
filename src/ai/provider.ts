@@ -10,10 +10,15 @@ import type { EventDetails, EventPlan } from "@/domain/types";
 export interface PlanningAIProvider {
   extractEventDetails(input: { text: string; today: string }): Promise<ExtractedEvent>;
   generatePlanDraft(input: { event: EventDetails; today: string }): Promise<PlanDraft>;
-  proposePlanChange(input: { plan: EventPlan; request: string; today: string }): Promise<PlanChangeProposal>;
+  proposePlanChange(input: {
+    plan: EventPlan;
+    request: string;
+    today: string;
+  }): Promise<PlanChangeProposal>;
 }
 
-export type AIErrorCode = "config" | "credits" | "rate_limited" | "denied" | "unavailable" | "malformed" | "refused";
+export type AIErrorCode =
+  "config" | "credits" | "rate_limited" | "denied" | "unavailable" | "malformed" | "refused";
 
 export class AIProviderError extends Error {
   constructor(

@@ -1,23 +1,50 @@
 import { describe, expect, it } from "vitest";
 import { communityPlan, op, proposal, TODAY } from "@/test/fixtures";
 import { commitChange } from "@/domain/planChange";
-import { createPlan, previewPendingChange, requestPlanChange, type ProposeFn } from "./planWorkflow";
+import {
+  appliedChangeSummary,
+  createPlan,
+  createRequestSequence,
+  pendingChangeIsStale,
+  previewPendingChange,
+  requestPlanChange,
+  validatePlanUpdate,
+  type ProposeFn,
+} from "./planWorkflow";
 
-const propose = (ops: Parameters<typeof proposal>[0]): ProposeFn => async () => ({ ok: true, data: proposal(ops) });
+const propose =
+  (ops: Parameters<typeof proposal>[0]): ProposeFn =>
+  async () => ({ ok: true, data: proposal(ops) });
 
 describe("plan workflow failure handling", () => {
   it("leaves the plan unchanged when the AI fails or throws", async () => {
     const plan = communityPlan();
     const snapshot = structuredClone(plan);
-    const failed = await requestPlanChange(plan, "Add 50 guests", async () => ({ ok: false, error: "AI down" }), TODAY);
+    const failed = await requestPlanChange(
+      plan,
+      "Add 50 guests",
+      async () => ({ ok: false, error: "AI down" }),
+      TODAY,
+    );
     expect(failed).toEqual({ status: "error", message: "AI down" });
-    const thrown = await requestPlanChange(plan, "Add 50 guests", async () => { throw new Error("network"); }, TODAY);
+    const thrown = await requestPlanChange(
+      plan,
+      "Add 50 guests",
+      async () => {
+        throw new Error("network");
+      },
+      TODAY,
+    );
     expect(thrown.status).toBe("error");
     expect(plan).toEqual(snapshot);
   });
 
   it("reports an error when the AI draft cannot be built", async () => {
-    const r = await createPlan(communityPlan().event, async () => ({ ok: false, error: "malformed" }), TODAY);
+    const r = await createPlan(
+      communityPlan().event,
+      async () => ({ ok: false, error: "malformed" }),
+      TODAY,
+    );
     expect(r).toEqual({ status: "error", message: "malformed" });
   });
 
@@ -27,7 +54,11 @@ describe("plan workflow failure handling", () => {
     const r = await requestPlanChange(
       plan,
       "mixed",
-      propose([op({ type: "set_guest_count", numberValue: -5 }), op({ type: "remove_budget_item", targetId: "bud_venue" }), op({ type: "set_budget", numberValue: 90_000 })]),
+      propose([
+        op({ type: "set_guest_count", numberValue: -5 }),
+        op({ type: "remove_budget_item", targetId: "bud_venue" }),
+        op({ type: "set_budget", numberValue: 90_000 }),
+      ]),
       TODAY,
     );
     if (r.status !== "ok") throw new Error("expected ok");
@@ -37,6 +68,125 @@ describe("plan workflow failure handling", () => {
     expect(preview.plan.event.budget).toBe(90_000);
     expect(preview.plan.budgetItems).toEqual(plan.budgetItems);
     expect(plan).toEqual(snapshot); // discarding = never committing the preview
+  });
+});
+
+describe("proposal review safeguards", () => {
+  it("never previews rejected operations and keeps discarding immutable", async () => {
+    const plan = communityPlan();
+    const snapshot = structuredClone(plan);
+    const r = await requestPlanChange(
+      plan,
+      "remove essential photographer",
+      propose([
+        op({ type: "remove_budget_item", targetId: "bud_photo" }),
+        op({ type: "set_guest_count", numberValue: 125 }),
+      ]),
+      TODAY,
+    );
+    if (r.status !== "ok") throw new Error("expected ok");
+    expect(r.value.validation.rejected).toHaveLength(1);
+    const preview = previewPendingChange(plan, r.value, TODAY);
+    expect(preview.plan.budgetItems.find((item) => item.id === "bud_photo")).toEqual(
+      snapshot.budgetItems.find((item) => item.id === "bud_photo"),
+    );
+    expect(preview.plan.event.guestCount).toBe(125);
+    expect(appliedChangeSummary(preview)).not.toMatch(/Photographer|removed/i);
+    expect(plan).toEqual(snapshot);
+  });
+
+  it("keeps zero-cost reductions unapplied until explicitly confirmed and preserves essential photography", async () => {
+    const plan = communityPlan();
+    plan.budgetItems = plan.budgetItems.map((item) => ({
+      ...item,
+      costStatus: "estimate",
+      essential: item.id === "bud_photo",
+    }));
+    const r = await requestPlanChange(
+      plan,
+      "Set all estimates to zero",
+      propose(
+        plan.budgetItems.map((item) =>
+          op({ type: "update_budget_item_amount", targetId: item.id, numberValue: 0 }),
+        ),
+      ),
+      TODAY,
+    );
+    if (r.status !== "ok") throw new Error("expected ok");
+    expect(r.value.validation.operations.every((entry) => entry.confirmationReason !== null)).toBe(
+      true,
+    );
+    expect(r.value.validation.rejected.some((entry) => /Photographer/.test(entry.label))).toBe(
+      true,
+    );
+    expect(r.value.selected).toEqual([]);
+    expect(previewPendingChange(plan, r.value, TODAY).report.budgetAfter.totalPlanned).toBe(
+      plan.budgetItems.reduce((sum, item) => sum + item.amount, 0),
+    );
+
+    const confirmed = {
+      ...r.value,
+      selected: r.value.validation.operations.map((entry) => entry.key),
+    };
+    const preview = previewPendingChange(plan, confirmed, TODAY);
+    expect(
+      preview.plan.budgetItems.find((item) => item.id === "bud_photo")?.amount,
+    ).toBeGreaterThan(0);
+    expect(preview.report.budgetAfter.totalPlanned).toBe(
+      plan.budgetItems.find((item) => item.id === "bud_photo")?.amount,
+    );
+  });
+  it("marks proposals stale after any plan edit and does not preview them against the changed plan", async () => {
+    const plan = communityPlan();
+    const r = await requestPlanChange(
+      plan,
+      "increase guests",
+      propose([op({ type: "set_guest_count", numberValue: 120 })]),
+      TODAY,
+    );
+    if (r.status !== "ok") throw new Error("expected ok");
+    const changed = { ...plan, event: { ...plan.event, name: "Changed event" } };
+    expect(pendingChangeIsStale(plan, r.value)).toBe(false);
+    expect(pendingChangeIsStale(changed, r.value)).toBe(true);
+  });
+});
+
+describe("request sequencing", () => {
+  it("ignores a response after the plan changes or the request is superseded", () => {
+    const sequence = createRequestSequence();
+    const oldRequest = sequence.begin();
+    sequence.invalidate();
+    const currentRequest = sequence.begin();
+    expect(sequence.isCurrent(oldRequest)).toBe(false);
+    expect(sequence.isCurrent(currentRequest)).toBe(true);
+  });
+});
+
+describe("direct plan edit validation", () => {
+  it("rejects invalid edits without returning a changed plan", () => {
+    const plan = communityPlan();
+    const result = validatePlanUpdate(plan, (current) => ({
+      ...current,
+      budgetItems: current.budgetItems.map((item, index) =>
+        index === 0 ? { ...item, amount: 1_000_000_001 } : item,
+      ),
+    }));
+    expect(result).toMatchObject({ status: "error" });
+    expect(plan.budgetItems[0]?.amount).not.toBe(1_000_000_001);
+  });
+
+  it("catches throwing edit functions and accepts valid edits", () => {
+    const plan = communityPlan();
+    expect(
+      validatePlanUpdate(plan, () => {
+        throw new Error("bad edit");
+      }),
+    ).toMatchObject({ status: "error" });
+    const valid = validatePlanUpdate(plan, (current) => ({
+      ...current,
+      revision: current.revision + 1,
+    }));
+    expect(valid).toMatchObject({ status: "ok", value: { revision: plan.revision + 1 } });
   });
 });
 
@@ -77,7 +227,11 @@ describe("acceptance scenario: 150 guests, ₹85,000, two weeks earlier", () => 
 
     expect(preview.report.budgetAfter.totalPlanned).toBe(117_500);
     expect(preview.report.budgetAfter.overrun).toBe(32_500);
-    expect(preview.report.budgetAfter.byStatus).toEqual({ estimate: 77_500, quoted: 15_000, confirmed: 25_000 });
+    expect(preview.report.budgetAfter.byStatus).toEqual({
+      estimate: 77_500,
+      quoted: 15_000,
+      confirmed: 25_000,
+    });
     expect(preview.report.overrun?.overrun).toBe(32_500);
 
     const task = (id: string) => next.tasks.find((t) => t.id === id)!;
@@ -88,7 +242,9 @@ describe("acceptance scenario: 150 guests, ₹85,000, two weeks earlier", () => 
     expect(task("task_decor").deadline).toBe("2026-03-26");
     expect(preview.report.dependencyIssues).toEqual([]);
     expect(preview.report.attention.map((t) => t.id)).toEqual(["task_invites", "task_caterer"]);
-    expect(preview.report.scheduleImpacts.find((i) => i.taskId === "task_invites")?.reason).toBe("rescheduled");
+    expect(preview.report.scheduleImpacts.find((i) => i.taskId === "task_invites")?.reason).toBe(
+      "rescheduled",
+    );
 
     expect(next.vendors).toEqual(plan.vendors);
     expect(next.tasks.map((t) => t.id)).toEqual(plan.tasks.map((t) => t.id));

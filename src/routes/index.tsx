@@ -7,10 +7,18 @@ import { usePlanWorkspace } from "@/state/usePlanWorkspace";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Event Planning Assistant — budgets, timelines & vendors" },
-      { name: "description", content: "Plan weddings, birthdays and community events: AI-assisted plans with validated budgets, deadlines and vendor tracking you can revise in plain language." },
-      { property: "og:title", content: "Event Planning Assistant" },
-      { property: "og:description", content: "AI-assisted event plans with validated budgets, timelines and vendor checklists." },
+      { title: "EventPilot — Event Planning & Management" },
+      {
+        name: "description",
+        content:
+          "Plan weddings, birthdays, and community events with EventPilot. Create AI-assisted plans with budgets, timelines, and vendor tracking you can revise in plain language.",
+      },
+      { property: "og:title", content: "EventPilot" },
+      {
+        property: "og:description",
+        content:
+          "Plan events confidently with AI-assisted budgets, timelines, and vendor checklists.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -31,8 +39,10 @@ function Index() {
   if (!ws.plan) {
     return (
       <>
-        <Onboarding onGenerate={ws.generate} />
-        <div aria-live="polite" role="status" className="sr-only">{ws.announcement}</div>
+        <Onboarding ws={ws} />
+        <div aria-live="polite" role="status" className="sr-only">
+          {ws.announcement}
+        </div>
       </>
     );
   }
