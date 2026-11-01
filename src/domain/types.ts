@@ -123,7 +123,12 @@ export const eventPlanSchema = z.object({
   assumptions: z.array(longText).max(30),
   ideas: z.array(longText).max(20),
   budgetItems: z.array(budgetItemSchema).max(60),
-  tasks: z.array(taskSchema).max(80),
+  tasks: z
+    .array(taskSchema)
+    .max(80)
+    .refine((tasks) => new Set(tasks.map((t) => t.id)).size === tasks.length, {
+      message: "Task IDs must be unique",
+    }),
   vendors: z.array(vendorRequirementSchema).max(30),
   history: z.array(planChangeRecordSchema).max(100),
   createdAt: z.string().max(40),

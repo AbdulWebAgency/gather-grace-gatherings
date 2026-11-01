@@ -243,6 +243,17 @@ export function validateProposal(
         else if (
           operations.some(
             (existing) =>
+              existing.operation.type === "remove_budget_item" &&
+              existing.operation.itemId === item.id,
+          )
+        )
+          reject(
+            `Update ${item.description}`,
+            "Cannot update an item that is proposed for removal.",
+          );
+        else if (
+          operations.some(
+            (existing) =>
               existing.operation.type === "update_budget_item_amount" &&
               existing.operation.itemId === item.id,
           )
@@ -318,6 +329,30 @@ export function validateProposal(
             `Remove ${item.description}`,
             "This cost is confirmed with a vendor and cannot be removed by the assistant.",
           );
+        else if (
+          operations.some(
+            (existing) =>
+              existing.operation.type === "remove_budget_item" &&
+              existing.operation.itemId === item.id,
+          )
+        )
+          reject(
+            `Remove ${item.description}`,
+            "This item has more than one proposed removal.",
+          );
+        else if (
+          operations.some(
+            (existing) =>
+              (existing.operation.type === "update_budget_item_amount" ||
+                existing.operation.type === "set_budget_item_essential" ||
+                existing.operation.type === "set_budget_item_cost_status") &&
+              existing.operation.itemId === item.id,
+          )
+        )
+          reject(
+            `Remove ${item.description}`,
+            "Cannot remove an item that has other proposed updates in the same proposal.",
+          );
         else
           accept(
             { type: "remove_budget_item", itemId: item.id },
@@ -329,6 +364,28 @@ export function validateProposal(
       case "set_budget_item_essential": {
         if (!item || op.essential === null)
           reject("Change priority", "Referenced budget item does not exist.");
+        else if (
+          operations.some(
+            (existing) =>
+              existing.operation.type === "remove_budget_item" &&
+              existing.operation.itemId === item.id,
+          )
+        )
+          reject(
+            `Change ${item.description}`,
+            "Cannot change priority of an item that is proposed for removal.",
+          );
+        else if (
+          operations.some(
+            (existing) =>
+              existing.operation.type === "set_budget_item_essential" &&
+              existing.operation.itemId === item.id,
+          )
+        )
+          reject(
+            `Change ${item.description}`,
+            "This item has more than one proposed priority change.",
+          );
         else if (item.essential === op.essential)
           reject(`Change ${item.description}`, "No change needed.");
         else
@@ -344,6 +401,28 @@ export function validateProposal(
         if (!item) reject("Change cost status", "Referenced budget item does not exist.");
         else if (!isOneOf(COST_STATUSES, op.statusValue))
           reject(`Change ${item.description}`, "Unknown cost status.");
+        else if (
+          operations.some(
+            (existing) =>
+              existing.operation.type === "remove_budget_item" &&
+              existing.operation.itemId === item.id,
+          )
+        )
+          reject(
+            `Change ${item.description}`,
+            "Cannot change cost status of an item that is proposed for removal.",
+          );
+        else if (
+          operations.some(
+            (existing) =>
+              existing.operation.type === "set_budget_item_cost_status" &&
+              existing.operation.itemId === item.id,
+          )
+        )
+          reject(
+            `Change ${item.description}`,
+            "This item has more than one proposed cost status update.",
+          );
         else if (op.statusValue === item.costStatus)
           reject(`Change ${item.description}`, "No change needed.");
         else
@@ -361,6 +440,17 @@ export function validateProposal(
         if (!task) reject("Update task", "Referenced task does not exist.");
         else if (!isOneOf(TASK_STATUSES, op.statusValue))
           reject(`Update ${task.title}`, "Unknown task status.");
+        else if (
+          operations.some(
+            (existing) =>
+              existing.operation.type === "update_task_status" &&
+              existing.operation.taskId === task.id,
+          )
+        )
+          reject(
+            `Update ${task.title}`,
+            "This task has more than one proposed status update.",
+          );
         else if (op.statusValue === task.status)
           reject(`Update ${task.title}`, "No change needed.");
         else
@@ -405,6 +495,17 @@ export function validateProposal(
         if (!vendor) reject("Update vendor", "Referenced vendor requirement does not exist.");
         else if (!isOneOf(BOOKING_STATUSES, op.statusValue))
           reject(`Update ${vendor.category}`, "Unknown booking status.");
+        else if (
+          operations.some(
+            (existing) =>
+              existing.operation.type === "set_vendor_booking_status" &&
+              existing.operation.vendorId === vendor.id,
+          )
+        )
+          reject(
+            `Update ${vendor.category}`,
+            "This vendor requirement has more than one proposed booking status update.",
+          );
         else if (op.statusValue === vendor.bookingStatus)
           reject(`Update ${vendor.category}`, "No change needed.");
         else
@@ -546,6 +647,8 @@ export function applyOperations(
         break;
       }
       case "update_budget_item_amount": {
+        const item = budgetItems.find((i) => i.id === op.itemId);
+        if (!item) break;
         budgetItems = budgetItems.map((i) => {
           if (i.id !== op.itemId) return i;
           changes.push(
@@ -586,29 +689,31 @@ export function applyOperations(
         break;
       }
       case "set_budget_item_essential": {
+        const item = budgetItems.find((i) => i.id === op.itemId);
+        if (!item) break;
         budgetItems = budgetItems.map((i) =>
           i.id === op.itemId ? { ...i, essential: op.essential } : i,
         );
         touched.items.add(op.itemId);
-        const item = budgetItems.find((i) => i.id === op.itemId);
-        if (item)
-          changes.push(`${item.description} marked ${op.essential ? "essential" : "optional"}.`);
+        changes.push(`${item.description} marked ${op.essential ? "essential" : "optional"}.`);
         break;
       }
       case "set_budget_item_cost_status": {
+        const item = budgetItems.find((i) => i.id === op.itemId);
+        if (!item) break;
         budgetItems = budgetItems.map((i) =>
           i.id === op.itemId ? { ...i, costStatus: op.status } : i,
         );
         touched.items.add(op.itemId);
-        const item = budgetItems.find((i) => i.id === op.itemId);
-        if (item) changes.push(`${item.description} cost status set to ${label(op.status)}.`);
+        changes.push(`${item.description} cost status set to ${label(op.status)}.`);
         break;
       }
       case "update_task_status": {
+        const task = tasks.find((t) => t.id === op.taskId);
+        if (!task) break;
         tasks = tasks.map((t) => (t.id === op.taskId ? { ...t, status: op.status } : t));
         touched.tasks.add(op.taskId);
-        const task = tasks.find((t) => t.id === op.taskId);
-        if (task) changes.push(`Task "${task.title}" set to ${label(op.status)}.`);
+        changes.push(`Task "${task.title}" set to ${label(op.status)}.`);
         break;
       }
       case "add_task": {
@@ -630,12 +735,13 @@ export function applyOperations(
         break;
       }
       case "set_vendor_booking_status": {
+        const vendor = vendors.find((v) => v.id === op.vendorId);
+        if (!vendor) break;
         vendors = vendors.map((v) =>
           v.id === op.vendorId ? { ...v, bookingStatus: op.status } : v,
         );
         touched.vendors.add(op.vendorId);
-        const vendor = vendors.find((v) => v.id === op.vendorId);
-        if (vendor) changes.push(`${vendor.category} booking status set to ${label(op.status)}.`);
+        changes.push(`${vendor.category} booking status set to ${label(op.status)}.`);
         break;
       }
     }

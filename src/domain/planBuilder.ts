@@ -66,7 +66,10 @@ export const planDraftSchema = z.object({
       }),
     )
     .min(3)
-    .max(40),
+    .max(40)
+    .refine((tasks) => new Set(tasks.map((t) => t.key)).size === tasks.length, {
+      message: "Task keys must be unique",
+    }),
   vendors: z
     .array(
       z.object({
@@ -104,6 +107,14 @@ export function buildPlanFromDraft(event: EventDetails, draft: PlanDraft, today:
       notes: d.notes.trim() || "AI planning estimate — not a vendor price.",
     };
   });
+
+  const seenKeys = new Set<string>();
+  for (const t of draft.tasks) {
+    if (seenKeys.has(t.key)) {
+      throw new PlanBuildError("The proposed task list contained duplicate task keys.");
+    }
+    seenKeys.add(t.key);
+  }
 
   const keyToId = new Map(draft.tasks.map((t) => [t.key, createId("task")]));
   const droppedDeps: string[] = [];
