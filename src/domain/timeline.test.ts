@@ -5,7 +5,10 @@ import { isoDateSchema, type Task } from "./types";
 
 describe("timeline engine", () => {
   it("computes deadlines from event date and lead time", () => {
-    expect(computeDeadline("2026-04-12", 10, TODAY)).toEqual({ deadline: "2026-04-02", compressed: false });
+    expect(computeDeadline("2026-04-12", 10, TODAY)).toEqual({
+      deadline: "2026-04-02",
+      compressed: false,
+    });
     expect(computeDeadline("2026-04-12", 60, TODAY)).toEqual({ deadline: TODAY, compressed: true });
   });
 
@@ -30,14 +33,37 @@ describe("timeline engine", () => {
     const venue = earlier.find((t) => t.id === "task_venue")!;
     expect(venue).toMatchObject({ status: "completed", deadline: "2026-03-08" });
     expect(earlier.find((t) => t.id === "task_invites")?.deadline).toBe(TODAY);
-    expect(earlier.find((t) => t.id === "task_caterer")).toMatchObject({ deadline: "2026-03-08", status: "in_progress" });
+    expect(earlier.find((t) => t.id === "task_caterer")).toMatchObject({
+      deadline: "2026-03-08",
+      status: "in_progress",
+    });
     expect(validateDependencies(earlier)).toEqual([]);
   });
 
   it("pushes dependents after their prerequisites", () => {
     const tasks: Task[] = [
-      { id: "a", title: "A", description: "", priority: "high", status: "not_started", daysBeforeEvent: 5, deadline: "2026-04-07", dependsOn: [], notes: "" },
-      { id: "b", title: "B", description: "", priority: "high", status: "not_started", daysBeforeEvent: 20, deadline: "2026-03-23", dependsOn: ["a"], notes: "" },
+      {
+        id: "a",
+        title: "A",
+        description: "",
+        priority: "high",
+        status: "not_started",
+        daysBeforeEvent: 5,
+        deadline: "2026-04-07",
+        dependsOn: [],
+        notes: "",
+      },
+      {
+        id: "b",
+        title: "B",
+        description: "",
+        priority: "high",
+        status: "not_started",
+        daysBeforeEvent: 20,
+        deadline: "2026-03-23",
+        dependsOn: ["a"],
+        notes: "",
+      },
     ];
     const out = rescheduleTasks(tasks, "2026-04-12", TODAY).tasks;
     expect(out.find((t) => t.id === "b")?.deadline).toBe("2026-04-07");
@@ -53,6 +79,8 @@ describe("timeline engine", () => {
       { ...base[4]!, id: "q", dependsOn: ["p"] },
     ];
     const kinds = validateDependencies(broken).map((i) => i.kind);
-    expect(kinds).toEqual(expect.arrayContaining(["unknown_dependency", "self_dependency", "cycle"]));
+    expect(kinds).toEqual(
+      expect.arrayContaining(["unknown_dependency", "self_dependency", "cycle"]),
+    );
   });
 });

@@ -336,10 +336,7 @@ export function validateProposal(
               existing.operation.itemId === item.id,
           )
         )
-          reject(
-            `Remove ${item.description}`,
-            "This item has more than one proposed removal.",
-          );
+          reject(`Remove ${item.description}`, "This item has more than one proposed removal.");
         else if (
           operations.some(
             (existing) =>
@@ -447,10 +444,7 @@ export function validateProposal(
               existing.operation.taskId === task.id,
           )
         )
-          reject(
-            `Update ${task.title}`,
-            "This task has more than one proposed status update.",
-          );
+          reject(`Update ${task.title}`, "This task has more than one proposed status update.");
         else if (op.statusValue === task.status)
           reject(`Update ${task.title}`, "No change needed.");
         else
@@ -649,11 +643,11 @@ export function applyOperations(
       case "update_budget_item_amount": {
         const item = budgetItems.find((i) => i.id === op.itemId);
         if (!item) break;
+        changes.push(
+          `${item.description} estimate changed from ${money(item.amount)} to ${money(op.amount)}.`,
+        );
         budgetItems = budgetItems.map((i) => {
           if (i.id !== op.itemId) return i;
-          changes.push(
-            `${i.description} estimate changed from ${money(i.amount)} to ${money(op.amount)}.`,
-          );
           const unitCost = i.scaling === "per_guest" ? op.amount / event.guestCount : i.unitCost;
           return { ...i, amount: op.amount, unitCost };
         });

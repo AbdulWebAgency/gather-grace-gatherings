@@ -1,15 +1,32 @@
 import { createId, safeMoney } from "./ids";
-import type { BookingStatus, BudgetItem, CostStatus, EventPlan, Quote, TaskStatus } from "./types";
+import type {
+  BookingStatus,
+  BudgetItem,
+  CostStatus,
+  EventPlan,
+  Quote,
+  QuoteStatus,
+  TaskStatus,
+} from "./types";
 
 /** Direct, user-initiated edits. These are pure functions over the plan. */
 
 const touch = (plan: EventPlan): EventPlan => ({ ...plan, updatedAt: new Date().toISOString() });
+
+function resolveQuoteStatus(quote: Quote, selectedQuoteId: string): QuoteStatus {
+  if (quote.id === selectedQuoteId) return "accepted";
+  if (quote.status === "accepted") return "received";
+  return quote.status;
+}
 
 export function updateBudgetItem(
   plan: EventPlan,
   itemId: string,
   patch: Partial<Pick<BudgetItem, "amount" | "costStatus" | "essential" | "description" | "notes">>,
 ): EventPlan {
+  const item = plan.budgetItems.find((i) => i.id === itemId);
+  if (!item) return plan;
+
   return touch({
     ...plan,
     budgetItems: plan.budgetItems.map((i) => {
@@ -26,7 +43,13 @@ export function updateBudgetItem(
 
 export function addBudgetItem(
   plan: EventPlan,
-  input: { category: string; description: string; amount: number; essential: boolean; costStatus: CostStatus },
+  input: {
+    category: string;
+    description: string;
+    amount: number;
+    essential: boolean;
+    costStatus: CostStatus;
+  },
 ): EventPlan {
   return touch({
     ...plan,
@@ -48,22 +71,47 @@ export function addBudgetItem(
 }
 
 export function removeBudgetItem(plan: EventPlan, itemId: string): EventPlan {
+  const item = plan.budgetItems.find((i) => i.id === itemId);
+  if (!item) return plan;
+
   return touch({
     ...plan,
     budgetItems: plan.budgetItems.filter((i) => i.id !== itemId),
-    vendors: plan.vendors.map((v) => (v.budgetItemId === itemId ? { ...v, budgetItemId: null } : v)),
+    vendors: plan.vendors.map((v) =>
+      v.budgetItemId === itemId ? { ...v, budgetItemId: null } : v,
+    ),
   });
 }
 
 export function setTaskStatus(plan: EventPlan, taskId: string, status: TaskStatus): EventPlan {
+  const task = plan.tasks.find((t) => t.id === taskId);
+  if (!task || task.status === status) return plan;
+
   return touch({ ...plan, tasks: plan.tasks.map((t) => (t.id === taskId ? { ...t, status } : t)) });
 }
 
-export function setVendorBookingStatus(plan: EventPlan, vendorId: string, status: BookingStatus): EventPlan {
-  return touch({ ...plan, vendors: plan.vendors.map((v) => (v.id === vendorId ? { ...v, bookingStatus: status } : v)) });
+export function setVendorBookingStatus(
+  plan: EventPlan,
+  vendorId: string,
+  status: BookingStatus,
+): EventPlan {
+  const vendor = plan.vendors.find((v) => v.id === vendorId);
+  if (!vendor || vendor.bookingStatus === status) return plan;
+
+  return touch({
+    ...plan,
+    vendors: plan.vendors.map((v) => (v.id === vendorId ? { ...v, bookingStatus: status } : v)),
+  });
 }
 
-export function addQuote(plan: EventPlan, vendorId: string, quote: Omit<Quote, "id" | "status">): EventPlan {
+export function addQuote(
+  plan: EventPlan,
+  vendorId: string,
+  quote: Omit<Quote, "id" | "status">,
+): EventPlan {
+  const vendor = plan.vendors.find((v) => v.id === vendorId);
+  if (!vendor) return plan;
+
   return touch({
     ...plan,
     vendors: plan.vendors.map((v) =>
@@ -71,7 +119,15 @@ export function addQuote(plan: EventPlan, vendorId: string, quote: Omit<Quote, "
         ? {
             ...v,
             bookingStatus: v.bookingStatus === "booked" ? v.bookingStatus : "quote_received",
-            quotes: [...v.quotes, { ...quote, amount: safeMoney(quote.amount), id: createId("quo"), status: "received" as const }].slice(0, 20),
+            quotes: [
+              ...v.quotes,
+              {
+                ...quote,
+                amount: safeMoney(quote.amount),
+                id: createId("quo"),
+                status: "received" as const,
+              },
+            ].slice(0, 20),
           }
         : v,
     ),
@@ -79,9 +135,14 @@ export function addQuote(plan: EventPlan, vendorId: string, quote: Omit<Quote, "
 }
 
 export function removeQuote(plan: EventPlan, vendorId: string, quoteId: string): EventPlan {
+  const vendor = plan.vendors.find((v) => v.id === vendorId);
+  if (!vendor || !vendor.quotes.some((q) => q.id === quoteId)) return plan;
+
   return touch({
     ...plan,
-    vendors: plan.vendors.map((v) => (v.id === vendorId ? { ...v, quotes: v.quotes.filter((q) => q.id !== quoteId) } : v)),
+    vendors: plan.vendors.map((v) =>
+      v.id === vendorId ? { ...v, quotes: v.quotes.filter((q) => q.id !== quoteId) } : v,
+    ),
   });
 }
 
@@ -93,9 +154,16 @@ export function acceptQuote(plan: EventPlan, vendorId: string, quoteId: string):
   const vendor = plan.vendors.find((v) => v.id === vendorId);
   const quote = vendor?.quotes.find((q) => q.id === quoteId);
   if (!vendor || !quote) return plan;
+
   const vendors = plan.vendors.map((v) =>
     v.id === vendorId
-      ? { ...v, quotes: v.quotes.map((q) => ({ ...q, status: q.id === quoteId ? ("accepted" as const) : q.status === "accepted" ? ("received" as const) : q.status })) }
+      ? {
+          ...v,
+          quotes: v.quotes.map((q) => ({
+            ...q,
+            status: resolveQuoteStatus(q, quoteId),
+          })),
+        }
       : v,
   );
   const budgetItems = plan.budgetItems.map((i) =>

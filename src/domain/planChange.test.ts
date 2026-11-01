@@ -322,7 +322,9 @@ describe("plan-change validation", () => {
     ]);
     expect(duplicateEssential.operations).toHaveLength(1);
     expect(duplicateEssential.rejected).toHaveLength(1);
-    expect(duplicateEssential.rejected[0]?.reason).toMatch(/more than one proposed priority change/);
+    expect(duplicateEssential.rejected[0]?.reason).toMatch(
+      /more than one proposed priority change/,
+    );
 
     // 5. Duplicate set_budget_item_cost_status
     const duplicateCostStatus = validate([
@@ -331,7 +333,9 @@ describe("plan-change validation", () => {
     ]);
     expect(duplicateCostStatus.operations).toHaveLength(1);
     expect(duplicateCostStatus.rejected).toHaveLength(1);
-    expect(duplicateCostStatus.rejected[0]?.reason).toMatch(/more than one proposed cost status update/);
+    expect(duplicateCostStatus.rejected[0]?.reason).toMatch(
+      /more than one proposed cost status update/,
+    );
 
     // 6. Duplicate update_task_status
     const duplicateTaskStatus = validate([
@@ -345,11 +349,17 @@ describe("plan-change validation", () => {
     // 7. Duplicate set_vendor_booking_status
     const duplicateVendorStatus = validate([
       op({ type: "set_vendor_booking_status", targetId: "ven_venue", statusValue: "contacted" }),
-      op({ type: "set_vendor_booking_status", targetId: "ven_venue", statusValue: "quote_received" }),
+      op({
+        type: "set_vendor_booking_status",
+        targetId: "ven_venue",
+        statusValue: "quote_received",
+      }),
     ]);
     expect(duplicateVendorStatus.operations).toHaveLength(1);
     expect(duplicateVendorStatus.rejected).toHaveLength(1);
-    expect(duplicateVendorStatus.rejected[0]?.reason).toMatch(/more than one proposed booking status update/);
+    expect(duplicateVendorStatus.rejected[0]?.reason).toMatch(
+      /more than one proposed booking status update/,
+    );
   });
 
   it("preserves valid combinations such as singleton event overrides and non-conflicting updates", () => {
@@ -398,7 +408,9 @@ describe("plan-change validation", () => {
       itemId: "bud_decor",
     });
     expect(removedThenUpdated.rejected).toHaveLength(3);
-    expect(removedThenUpdated.rejected.every((r) => r.reason.includes("proposed for removal"))).toBe(true);
+    expect(
+      removedThenUpdated.rejected.every((r) => r.reason.includes("proposed for removal")),
+    ).toBe(true);
 
     // Defensive applyOperations behavior on nonexistent / removed entities
     const plan = communityPlan();
@@ -416,6 +428,8 @@ describe("plan-change validation", () => {
     );
     expect(result.plan.budgetItems.find((i) => i.id === "bud_decor")).toBeUndefined();
     expect(result.report.changes).toContain("Removed Decorations (₹10,000).");
-    expect(result.report.changes.some((c) => c.includes("Decorations estimate changed"))).toBe(false);
+    expect(result.report.changes.some((c) => c.includes("Decorations estimate changed"))).toBe(
+      false,
+    );
   });
 });

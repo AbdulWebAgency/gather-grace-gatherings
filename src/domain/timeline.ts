@@ -1,4 +1,11 @@
-import { addDays, differenceInCalendarDays, format, max as maxDate, min as minDate, parseISO } from "date-fns";
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  max as maxDate,
+  min as minDate,
+  parseISO,
+} from "date-fns";
 import type { Task } from "./types";
 
 /** Deterministic timeline and dependency engine. */
@@ -83,13 +90,25 @@ export function validateDependencies(tasks: Task[]): DependencyIssue[] {
   for (const task of tasks) {
     for (const dep of task.dependsOn) {
       if (dep === task.id) {
-        issues.push({ kind: "self_dependency", taskId: task.id, message: `"${task.title}" depends on itself.` });
+        issues.push({
+          kind: "self_dependency",
+          taskId: task.id,
+          message: `"${task.title}" depends on itself.`,
+        });
       } else if (!byId.has(dep)) {
-        issues.push({ kind: "unknown_dependency", taskId: task.id, message: `"${task.title}" depends on a task that does not exist.` });
+        issues.push({
+          kind: "unknown_dependency",
+          taskId: task.id,
+          message: `"${task.title}" depends on a task that does not exist.`,
+        });
       } else {
         const prereq = byId.get(dep)!;
         // A completed prerequisite cannot block anything, whatever its old deadline.
-        if (prereq.deadline > task.deadline && task.status !== "completed" && prereq.status !== "completed") {
+        if (
+          prereq.deadline > task.deadline &&
+          task.status !== "completed" &&
+          prereq.status !== "completed"
+        ) {
           issues.push({
             kind: "order",
             taskId: task.id,
@@ -108,7 +127,11 @@ export function validateDependencies(tasks: Task[]): DependencyIssue[] {
       if (!byId.has(dep) || dep === id) continue;
       const s = state.get(dep) ?? 0;
       if (s === 1) {
-        issues.push({ kind: "cycle", taskId: id, message: `Circular dependency: ${[...trail, id, dep].map((t) => byId.get(t)?.title ?? t).join(" → ")}` });
+        issues.push({
+          kind: "cycle",
+          taskId: id,
+          message: `Circular dependency: ${[...trail, id, dep].map((t) => byId.get(t)?.title ?? t).join(" → ")}`,
+        });
       } else if (s === 0) {
         visit(dep, [...trail, id]);
       }
@@ -156,7 +179,10 @@ export function rescheduleTasks(
   eventDate: string,
   today: string,
 ): { tasks: Task[]; impacts: TaskScheduleImpact[] } {
-  const scheduled = new Map<string, { deadline: string; reason: TaskScheduleImpact["reason"] | null }>();
+  const scheduled = new Map<
+    string,
+    { deadline: string; reason: TaskScheduleImpact["reason"] | null }
+  >();
 
   for (const task of topologicalOrder(tasks)) {
     if (task.status === "completed") {
@@ -169,7 +195,12 @@ export function rescheduleTasks(
     for (const dep of task.dependsOn) {
       const prereq = scheduled.get(dep);
       const prereqTask = tasks.find((t) => t.id === dep);
-      if (prereq && prereqTask && prereqTask.status !== "completed" && prereq.deadline > finalDeadline) {
+      if (
+        prereq &&
+        prereqTask &&
+        prereqTask.status !== "completed" &&
+        prereq.deadline > finalDeadline
+      ) {
         finalDeadline = prereq.deadline > eventDate ? eventDate : prereq.deadline;
         reason = "dependency_adjusted";
       }
@@ -181,7 +212,13 @@ export function rescheduleTasks(
   const updated = tasks.map((task) => {
     const s = scheduled.get(task.id)!;
     if (s.deadline === task.deadline) return task;
-    impacts.push({ taskId: task.id, title: task.title, before: task.deadline, after: s.deadline, reason: s.reason ?? "rescheduled" });
+    impacts.push({
+      taskId: task.id,
+      title: task.title,
+      before: task.deadline,
+      after: s.deadline,
+      reason: s.reason ?? "rescheduled",
+    });
     return { ...task, deadline: s.deadline };
   });
   return { tasks: updated, impacts };

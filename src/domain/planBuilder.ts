@@ -90,11 +90,19 @@ export class PlanBuildError extends Error {}
  * computes amounts and deadlines deterministically, and marks every cost as an
  * estimate (the AI cannot produce quotes or confirmations).
  */
-export function buildPlanFromDraft(event: EventDetails, draft: PlanDraft, today: string, nowIso: string): EventPlan {
+export function buildPlanFromDraft(
+  event: EventDetails,
+  draft: PlanDraft,
+  today: string,
+  nowIso: string,
+): EventPlan {
   const budgetItems = draft.budgetItems.map((d) => {
     const perGuest = d.scaling === "per_guest";
     const unitCost = perGuest ? (d.unitCost ?? d.amount / event.guestCount) : null;
-    const amount = perGuest && unitCost !== null ? roundMoney(unitCost * event.guestCount) : roundMoney(d.amount);
+    const amount =
+      perGuest && unitCost !== null
+        ? roundMoney(unitCost * event.guestCount)
+        : roundMoney(d.amount);
     return {
       id: createId("bud"),
       category: d.category.trim(),
@@ -137,7 +145,8 @@ export function buildPlanFromDraft(event: EventDetails, draft: PlanDraft, today:
   }));
 
   const cycles = validateDependencies(draftTasks).filter((i) => i.kind === "cycle");
-  if (cycles.length) throw new PlanBuildError("The proposed task list contained circular dependencies.");
+  if (cycles.length)
+    throw new PlanBuildError("The proposed task list contained circular dependencies.");
 
   const { tasks } = rescheduleTasks(draftTasks, event.date, today);
 
@@ -157,9 +166,16 @@ export function buildPlanFromDraft(event: EventDetails, draft: PlanDraft, today:
     };
   });
 
-  const assumptions = [...draft.assumptions, "All costs are AI planning estimates until you record a vendor quote or confirmation."];
-  if (event.dateIsApproximate) assumptions.push(`The date ${event.date} is approximate; deadlines will move when you confirm it.`);
-  if (droppedDeps.length) assumptions.push(`${droppedDeps.length} invalid task dependency reference(s) were ignored.`);
+  const assumptions = [
+    ...draft.assumptions,
+    "All costs are AI planning estimates until you record a vendor quote or confirmation.",
+  ];
+  if (event.dateIsApproximate)
+    assumptions.push(
+      `The date ${event.date} is approximate; deadlines will move when you confirm it.`,
+    );
+  if (droppedDeps.length)
+    assumptions.push(`${droppedDeps.length} invalid task dependency reference(s) were ignored.`);
 
   return {
     schemaVersion: 1,

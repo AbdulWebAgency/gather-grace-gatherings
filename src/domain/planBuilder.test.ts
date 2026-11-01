@@ -62,7 +62,9 @@ describe("planBuilder task key and ID uniqueness", () => {
     const result = planDraftSchema.safeParse(draftWithDuplicateKeys);
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues.some((issue) => issue.message === "Task keys must be unique")).toBe(true);
+      expect(
+        result.error.issues.some((issue) => issue.message === "Task keys must be unique"),
+      ).toBe(true);
     }
   });
 
@@ -108,8 +110,9 @@ describe("planBuilder task key and ID uniqueness", () => {
     const result = eventPlanSchema.safeParse(invalidPlan);
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues.some((issue) => issue.message === "Task IDs must be unique")).toBe(true);
+      expect(result.error.issues.some((issue) => issue.message === "Task IDs must be unique")).toBe(
+        true,
+      );
     }
   });
 });
-

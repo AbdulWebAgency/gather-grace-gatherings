@@ -1,4 +1,14 @@
-import { AlertTriangle, CheckCircle2, Circle, CircleDashed, Clock, FileText, Lock, PauseCircle, Phone } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Circle,
+  CircleDashed,
+  Clock,
+  FileText,
+  Lock,
+  PauseCircle,
+  Phone,
+} from "lucide-react";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +22,10 @@ const TONES: Record<Tone, string> = {
   danger: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
-const STATUS_META: Record<string, { label: string; tone: Tone; icon: ComponentType<{ className?: string }> }> = {
+const STATUS_META: Record<
+  string,
+  { label: string; tone: Tone; icon: ComponentType<{ className?: string }> }
+> = {
   not_started: { label: "Not started", tone: "neutral", icon: Circle },
   in_progress: { label: "In progress", tone: "info", icon: CircleDashed },
   completed: { label: "Completed", tone: "success", icon: CheckCircle2 },
@@ -33,7 +46,13 @@ export function StatusBadge({ status, className }: { status: string; className?:
   const meta = STATUS_META[status] ?? { label: status, tone: "neutral" as Tone, icon: Circle };
   const Icon = meta.icon;
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap", TONES[meta.tone], className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold whitespace-nowrap",
+        TONES[meta.tone],
+        className,
+      )}
+    >
       <Icon className="size-3.5" aria-hidden="true" />
       {meta.label}
     </span>

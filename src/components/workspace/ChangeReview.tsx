@@ -7,9 +7,8 @@ import { formatMoney } from "@/domain/budget";
 import type { ChangePreview } from "@/domain/planChange";
 import { classifyTask } from "@/domain/timeline";
 import type { EventPlan } from "@/domain/types";
-import type { PendingChange } from "@/state/planWorkflow";
+import { pendingChangeIsStale, type PendingChange } from "@/state/planWorkflow";
 import { todayIso } from "@/state/usePlanWorkspace";
-import { pendingChangeIsStale } from "@/state/planWorkflow";
 
 interface Props {
   headingRef: RefObject<HTMLHeadingElement | null>;
